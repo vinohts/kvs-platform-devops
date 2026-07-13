@@ -20,7 +20,6 @@ pipeline {
                     /*
                      * ----------------------------------------------------------------
                      * Temporary Branch
-                     * Later this will come from GitHub Multibranch Pipeline
                      * ----------------------------------------------------------------
                      */
                     String currentBranch = "develop"
@@ -51,6 +50,15 @@ pipeline {
                     def initialize = load "jenkins/stages/initialize.groovy"
 
                     def buildInfo = initialize.call(currentBranch, config)
+
+                    /*
+                     * ----------------------------------------------------------------
+                     * Build Application
+                     * ----------------------------------------------------------------
+                     */
+                    def build = load "jenkins/stages/build.groovy"
+
+                    build.call(buildInfo)
 
                     /*
                      * ----------------------------------------------------------------
