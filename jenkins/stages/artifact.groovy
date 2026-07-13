@@ -3,6 +3,11 @@
  * KVS Platform
  * Artifact Management
  * ============================================================================
+ *
+ * Requires the "Pipeline: AWS Steps" plugin (jenkinsci/pipeline-aws-plugin).
+ * Uses withAWS + s3Upload/s3Doesobjectexist instead of shelling out to the
+ * AWS CLI, so there is no dependency on aws.exe being installed on the agent
+ * and no risk of a step accidentally running outside the credential scope.
  */
 
 def call(Map buildInfo, Map artifact) {
@@ -19,33 +24,35 @@ def call(Map buildInfo, Map artifact) {
     String objectKey = "${buildInfo.GIT_BRANCH}/${buildInfo.BUILD_VERSION}/${artifact.ARTIFACT_NAME}"
 
     /*
-     * Upload Artifact
+     * Upload Artifact + Verify (single credential scope)
      */
-    withCredentials([[
-        $class: 'AmazonWebServicesCredentialsBinding',
-        credentialsId: buildInfo.AWS_CREDENTIAL
-    ]]) {
+    withAWS(
+        credentials: buildInfo.AWS_CREDENTIAL,
+        region: buildInfo.AWS_REGION
+    ) {
 
-        bat """
-        aws s3 cp ^
-        "${artifact.ARTIFACT_PATH}" ^
-        s3://${bucket}/${objectKey}
-        """
+        s3Upload(
+            file   : artifact.ARTIFACT_PATH,
+            bucket : bucket,
+            path   : objectKey
+        )
+
+        boolean exists = s3DoesObjectExist(
+            bucket : bucket,
+            path   : objectKey
+        )
+
+        if (!exists) {
+            error "Artifact verification failed: s3://${bucket}/${objectKey} not found after upload"
+        }
 
     }
-
-    /*
-     * Verify Upload
-     */
-    bat """
-    aws s3 ls s3://${bucket}/${objectKey}
-    """
 
     /*
      * Remove Local Artifact
      */
     bat """
-    del "${artifact.ARTIFACT_PATH}"
+    if exist "${artifact.ARTIFACT_PATH}" del "${artifact.ARTIFACT_PATH}"
     """
 
     echo ""
