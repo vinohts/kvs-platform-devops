@@ -11,7 +11,9 @@ def call(String branchName) {
     echo "Branch Validation"
     echo "--------------------------------------------------"
 
-    def environments = load 'jenkins/config/environments.groovy'
+    def envConfig = load 'jenkins/config/environments.groovy'
+
+    def environments = envConfig.getConfigurations()
 
     if (!environments.containsKey(branchName)) {
         error "Unsupported branch : ${branchName}"
@@ -25,6 +27,7 @@ def call(String branchName) {
     echo "AWS Credential  : ${config.AWS_CREDENTIAL}"
 
     return config
+
 }
 
 return this
