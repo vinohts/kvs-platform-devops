@@ -30,7 +30,6 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def branch = load "jenkins/stages/branch.groovy"
-
                     def config = branch.call(currentBranch)
 
                     /*
@@ -39,7 +38,6 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def checkoutStage = load "jenkins/stages/checkout.groovy"
-
                     checkoutStage.call(currentBranch)
 
                     /*
@@ -48,7 +46,6 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def initialize = load "jenkins/stages/initialize.groovy"
-
                     def buildInfo = initialize.call(currentBranch, config)
 
                     /*
@@ -57,8 +54,23 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def build = load "jenkins/stages/build.groovy"
-
                     build.call(buildInfo)
+
+                    /*
+                     * ----------------------------------------------------------------
+                     * Package Application
+                     * ----------------------------------------------------------------
+                     */
+                    def packageStage = load "jenkins/stages/package.groovy"
+                    def artifact = packageStage.call(buildInfo)
+
+                    /*
+                     * ----------------------------------------------------------------
+                     * Publish Artifact to Amazon S3
+                     * ----------------------------------------------------------------
+                     */
+                    def artifactStage = load "jenkins/stages/artifact.groovy"
+                    def s3Artifact = artifactStage.call(buildInfo, artifact)
 
                     /*
                      * ----------------------------------------------------------------
@@ -70,13 +82,13 @@ pipeline {
                     echo "Pipeline Summary"
                     echo "========================================"
                     echo "Pipeline Name : ${buildInfo.PIPELINE_NAME}"
-                    echo "Job Name      : ${buildInfo.JOB_NAME}"
-                    echo "Build Number  : ${buildInfo.BUILD_NUMBER}"
                     echo "Build Version : ${buildInfo.BUILD_VERSION}"
-                    echo "Git Branch    : ${buildInfo.GIT_BRANCH}"
                     echo "Environment   : ${buildInfo.ENVIRONMENT}"
                     echo "AWS Region    : ${buildInfo.AWS_REGION}"
-                    echo "Workspace     : ${buildInfo.WORKSPACE}"
+                    echo "Artifact      : ${artifact.ARTIFACT_NAME}"
+                    echo "S3 Bucket     : ${s3Artifact.BUCKET}"
+                    echo "S3 Object     : ${s3Artifact.OBJECT_KEY}"
+                    echo "S3 URI        : ${s3Artifact.S3_URI}"
                     echo "========================================"
 
                 }
