@@ -5,6 +5,19 @@
  * ============================================================================
  */
 
+/*
+ * ----------------------------------------------------------------
+ * Pipeline-wide Variables
+ * Declared here (with def) so they are shared safely across stages
+ * without triggering "Did you forget the def keyword?" warnings.
+ * ----------------------------------------------------------------
+ */
+def currentBranch
+def config
+def buildInfo
+def artifact
+def s3Artifact
+
 pipeline {
 
     agent any
