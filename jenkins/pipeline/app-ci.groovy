@@ -22,7 +22,7 @@ pipeline {
                      * Temporary Branch
                      * ----------------------------------------------------------------
                      */
-                    String currentBranch = "develop"
+                    currentBranch = "develop"
 
                     /*
                      * ----------------------------------------------------------------
@@ -30,7 +30,19 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def branch = load "jenkins/stages/branch.groovy"
-                    def config = branch.call(currentBranch)
+                    config = branch.call(currentBranch)
+
+                }
+
+            }
+
+        }
+
+        stage('Checkout') {
+
+            steps {
+
+                script {
 
                     /*
                      * ----------------------------------------------------------------
@@ -40,13 +52,37 @@ pipeline {
                     def checkoutStage = load "jenkins/stages/checkout.groovy"
                     checkoutStage.call(currentBranch)
 
+                }
+
+            }
+
+        }
+
+        stage('Initialize') {
+
+            steps {
+
+                script {
+
                     /*
                      * ----------------------------------------------------------------
                      * Pipeline Initialization
                      * ----------------------------------------------------------------
                      */
                     def initialize = load "jenkins/stages/initialize.groovy"
-                    def buildInfo = initialize.call(currentBranch, config)
+                    buildInfo = initialize.call(currentBranch, config)
+
+                }
+
+            }
+
+        }
+
+        stage('Build') {
+
+            steps {
+
+                script {
 
                     /*
                      * ----------------------------------------------------------------
@@ -56,13 +92,37 @@ pipeline {
                     def build = load "jenkins/stages/build.groovy"
                     build.call(buildInfo)
 
+                }
+
+            }
+
+        }
+
+        stage('Package') {
+
+            steps {
+
+                script {
+
                     /*
                      * ----------------------------------------------------------------
                      * Package Application
                      * ----------------------------------------------------------------
                      */
                     def packageStage = load "jenkins/stages/package.groovy"
-                    def artifact = packageStage.call(buildInfo)
+                    artifact = packageStage.call(buildInfo)
+
+                }
+
+            }
+
+        }
+
+        stage('Publish') {
+
+            steps {
+
+                script {
 
                     /*
                      * ----------------------------------------------------------------
@@ -70,7 +130,19 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def artifactStage = load "jenkins/stages/artifact.groovy"
-                    def s3Artifact = artifactStage.call(buildInfo, artifact)
+                    s3Artifact = artifactStage.call(buildInfo, artifact)
+
+                }
+
+            }
+
+        }
+
+        stage('Summary') {
+
+            steps {
+
+                script {
 
                     /*
                      * ----------------------------------------------------------------
