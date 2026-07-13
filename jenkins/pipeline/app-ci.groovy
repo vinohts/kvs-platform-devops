@@ -23,12 +23,27 @@ pipeline {
                      */
                     String currentBranch = "develop"
 
+                    /*
+                     * Branch Validation
+                     */
                     def branch = load "jenkins/stages/branch.groovy"
 
                     def config = branch.call(currentBranch)
 
+                    /*
+                     * Checkout Application Repository
+                     */
+                    def checkoutStage = load "jenkins/stages/checkout.groovy"
+
+                    checkoutStage.call(currentBranch)
+
+                    /*
+                     * Deployment Summary
+                     */
                     echo ""
-                    echo "========== Deployment Summary =========="
+                    echo "========================================"
+                    echo "Deployment Summary"
+                    echo "========================================"
                     echo "Environment    : ${config.ENVIRONMENT}"
                     echo "AWS Region     : ${config.AWS_REGION}"
                     echo "Credential     : ${config.AWS_CREDENTIAL}"
