@@ -6,12 +6,23 @@
  */
 
 def currentBranch
+def artifactVersion
 def config
 def buildInfo
 
 pipeline {
 
     agent any
+
+    parameters {
+
+        string(
+            name: 'ARTIFACT_VERSION',
+            defaultValue: 'develop-9',
+            description: 'Artifact Version to Deploy'
+        )
+
+    }
 
     stages {
 
@@ -23,9 +34,10 @@ pipeline {
 
                     /*
                      * Temporary Branch
-                     * Later this will come from Multibranch.
                      */
                     currentBranch = "develop"
+
+                    artifactVersion = params.ARTIFACT_VERSION
 
                     def branch = load "jenkins/stages/branch.groovy"
 
@@ -63,9 +75,9 @@ pipeline {
                     echo "========================================"
                     echo "Deployment Pipeline"
                     echo "========================================"
-                    echo "Pipeline Name : ${buildInfo.PIPELINE_NAME}"
-                    echo "Environment   : ${buildInfo.ENVIRONMENT}"
-                    echo "AWS Region    : ${buildInfo.AWS_REGION}"
+                    echo "Environment      : ${buildInfo.ENVIRONMENT}"
+                    echo "AWS Region       : ${buildInfo.AWS_REGION}"
+                    echo "Artifact Version : ${artifactVersion}"
                     echo "========================================"
 
                 }
