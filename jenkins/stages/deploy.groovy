@@ -1,32 +1,39 @@
 /**
  * ============================================================================
  * KVS Platform
- * Download Artifact Stage
+ * Deployment Stage
  * ============================================================================
  */
 
-def call(Map buildInfo) {
+def call(Map buildInfo, String artifactVersion) {
 
     echo "--------------------------------------------------"
-    echo "Download Artifact"
+    echo "Application Deployment"
     echo "--------------------------------------------------"
 
+    /*
+     * S3 Information
+     */
     String bucket = "kvs-platform-artifacts"
 
-    String artifactName = "kvs-platform-${buildInfo.BUILD_VERSION}.zip"
+    String artifactName = "kvs-platform-${artifactVersion}.zip"
 
-    String objectKey = "${buildInfo.GIT_BRANCH}/${buildInfo.BUILD_VERSION}/${artifactName}"
+    String objectKey = "${buildInfo.GIT_BRANCH}/${artifactVersion}/${artifactName}"
 
-    String downloadDirectory = "${env.WORKSPACE}\\downloads"
+    /*
+     * Download Location
+     */
+    String downloadDirectory = "${env.WORKSPACE}\\download"
 
     String downloadPath = "${downloadDirectory}\\${artifactName}"
 
     bat """
-    if not exist "${downloadDirectory}" (
-        mkdir "${downloadDirectory}"
-    )
+    if not exist "${downloadDirectory}" mkdir "${downloadDirectory}"
     """
 
+    /*
+     * Download Artifact
+     */
     withAWS(
         credentials: buildInfo.AWS_CREDENTIAL,
         region: buildInfo.AWS_REGION
@@ -41,17 +48,22 @@ def call(Map buildInfo) {
 
     }
 
+    /*
+     * Verify Download
+     */
+    if (!fileExists(downloadPath)) {
+
+        error "Artifact download failed."
+
+    }
+
     echo ""
-    echo "Artifact Downloaded Successfully"
+    echo "Artifact Download Successful"
     echo "Bucket          : ${bucket}"
     echo "Object Key      : ${objectKey}"
     echo "Download Path   : ${downloadPath}"
 
     return [
-
-        BUCKET : bucket,
-
-        OBJECT_KEY : objectKey,
 
         ARTIFACT_NAME : artifactName,
 

@@ -9,6 +9,7 @@ def currentBranch
 def artifactVersion
 def config
 def buildInfo
+def deploymentArtifact
 
 pipeline {
 
@@ -64,6 +65,25 @@ pipeline {
             }
 
         }
+
+        stage('Deploy') {
+
+    steps {
+
+        script {
+
+            def deploy = load "jenkins/stages/deploy.groovy"
+
+            deploymentArtifact = deploy.call(
+                buildInfo,
+                artifactVersion
+            )
+
+        }
+
+    }
+
+}
 
         stage('Summary') {
 
