@@ -8,6 +8,7 @@
 def currentBranch
 def config
 def buildInfo
+def downloadInfo
 
 pipeline {
 
@@ -21,18 +22,8 @@ pipeline {
 
                 script {
 
-                    /*
-                     * ----------------------------------------------------------------
-                     * Temporary Branch
-                     * ----------------------------------------------------------------
-                     */
                     currentBranch = "develop"
 
-                    /*
-                     * ----------------------------------------------------------------
-                     * Branch Validation
-                     * ----------------------------------------------------------------
-                     */
                     def branch = load "jenkins/stages/branch.groovy"
                     config = branch.call(currentBranch)
 
@@ -48,13 +39,23 @@ pipeline {
 
                 script {
 
-                    /*
-                     * ----------------------------------------------------------------
-                     * Pipeline Initialization
-                     * ----------------------------------------------------------------
-                     */
                     def initialize = load "jenkins/stages/initialize.groovy"
                     buildInfo = initialize.call(currentBranch, config)
+
+                }
+
+            }
+
+        }
+
+        stage('Download Artifact') {
+
+            steps {
+
+                script {
+
+                    def download = load "jenkins/stages/download.groovy"
+                    downloadInfo = download.call(buildInfo)
 
                 }
 
@@ -70,12 +71,14 @@ pipeline {
 
                     echo ""
                     echo "========================================"
-                    echo "Deployment Pipeline Summary"
+                    echo "Deployment Summary"
                     echo "========================================"
                     echo "Pipeline Name : ${buildInfo.PIPELINE_NAME}"
                     echo "Build Version : ${buildInfo.BUILD_VERSION}"
                     echo "Environment   : ${buildInfo.ENVIRONMENT}"
                     echo "AWS Region    : ${buildInfo.AWS_REGION}"
+                    echo "Artifact      : ${downloadInfo.ARTIFACT_NAME}"
+                    echo "Download Path : ${downloadInfo.DOWNLOAD_PATH}"
                     echo "========================================"
 
                 }
