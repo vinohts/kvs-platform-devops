@@ -1,14 +1,13 @@
 /**
  * ============================================================================
  * KVS Platform
- * Application Deployment Pipeline
+ * Application Continuous Deployment Pipeline
  * ============================================================================
  */
 
 def currentBranch
 def config
 def buildInfo
-def downloadInfo
 
 pipeline {
 
@@ -22,9 +21,14 @@ pipeline {
 
                 script {
 
+                    /*
+                     * Temporary Branch
+                     * Later this will come from Multibranch.
+                     */
                     currentBranch = "develop"
 
                     def branch = load "jenkins/stages/branch.groovy"
+
                     config = branch.call(currentBranch)
 
                 }
@@ -40,22 +44,8 @@ pipeline {
                 script {
 
                     def initialize = load "jenkins/stages/initialize.groovy"
+
                     buildInfo = initialize.call(currentBranch, config)
-
-                }
-
-            }
-
-        }
-
-        stage('Download Artifact') {
-
-            steps {
-
-                script {
-
-                    def download = load "jenkins/stages/download.groovy"
-                    downloadInfo = download.call(buildInfo)
 
                 }
 
@@ -71,14 +61,11 @@ pipeline {
 
                     echo ""
                     echo "========================================"
-                    echo "Deployment Summary"
+                    echo "Deployment Pipeline"
                     echo "========================================"
                     echo "Pipeline Name : ${buildInfo.PIPELINE_NAME}"
-                    echo "Build Version : ${buildInfo.BUILD_VERSION}"
                     echo "Environment   : ${buildInfo.ENVIRONMENT}"
                     echo "AWS Region    : ${buildInfo.AWS_REGION}"
-                    echo "Artifact      : ${downloadInfo.ARTIFACT_NAME}"
-                    echo "Download Path : ${downloadInfo.DOWNLOAD_PATH}"
                     echo "========================================"
 
                 }
