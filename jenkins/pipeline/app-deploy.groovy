@@ -98,6 +98,8 @@ pipeline {
                     echo "Environment      : ${buildInfo.ENVIRONMENT}"
                     echo "AWS Region       : ${buildInfo.AWS_REGION}"
                     echo "Artifact Version : ${artifactVersion}"
+                    echo "Downloaded File  : ${deploymentArtifact.ARTIFACT_NAME}"
+                    echo "Download Path    : ${deploymentArtifact.DOWNLOAD_PATH}"
                     echo "========================================"
 
                 }
