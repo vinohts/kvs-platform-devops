@@ -18,7 +18,7 @@ pipeline {
 
         string(
             name: 'ARTIFACT_VERSION',
-            defaultValue: 'develop-9',
+            defaultValue: 'develop-12',
             description: 'Artifact Version to Deploy'
         )
 
