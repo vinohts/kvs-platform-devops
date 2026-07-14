@@ -12,7 +12,9 @@ def call(Map buildInfo, String artifactVersion) {
     echo "--------------------------------------------------"
 
     /*
+     * ----------------------------------------------------------------
      * S3 Information
+     * ----------------------------------------------------------------
      */
     String bucket = "kvs-platform-artifacts"
 
@@ -21,18 +23,33 @@ def call(Map buildInfo, String artifactVersion) {
     String objectKey = "${buildInfo.GIT_BRANCH}/${artifactVersion}/${artifactName}"
 
     /*
-     * Download Location
+     * ----------------------------------------------------------------
+     * Workspace Directories
+     * ----------------------------------------------------------------
      */
     String downloadDirectory = "${env.WORKSPACE}\\download"
 
+    String deployDirectory = "${env.WORKSPACE}\\deploy"
+
     String downloadPath = "${downloadDirectory}\\${artifactName}"
 
+    /*
+     * ----------------------------------------------------------------
+     * Prepare Directories
+     * ----------------------------------------------------------------
+     */
     bat """
-    if not exist "${downloadDirectory}" mkdir "${downloadDirectory}"
+    if exist "${downloadDirectory}" rmdir /S /Q "${downloadDirectory}"
+    if exist "${deployDirectory}" rmdir /S /Q "${deployDirectory}"
+
+    mkdir "${downloadDirectory}"
+    mkdir "${deployDirectory}"
     """
 
     /*
+     * ----------------------------------------------------------------
      * Download Artifact
+     * ----------------------------------------------------------------
      */
     withAWS(
         credentials: buildInfo.AWS_CREDENTIAL,
@@ -49,11 +66,38 @@ def call(Map buildInfo, String artifactVersion) {
     }
 
     /*
+     * ----------------------------------------------------------------
      * Verify Download
+     * ----------------------------------------------------------------
      */
     if (!fileExists(downloadPath)) {
 
         error "Artifact download failed."
+
+    }
+
+    /*
+     * ----------------------------------------------------------------
+     * Extract Artifact
+     * ----------------------------------------------------------------
+     */
+    powershell """
+
+    Expand-Archive `
+        -Path "${downloadPath}" `
+        -DestinationPath "${deployDirectory}" `
+        -Force
+
+    """
+
+    /*
+     * ----------------------------------------------------------------
+     * Verify Extraction
+     * ----------------------------------------------------------------
+     */
+    if (!fileExists("${deployDirectory}\\README.md")) {
+
+        error "Artifact extraction failed."
 
     }
 
@@ -63,11 +107,21 @@ def call(Map buildInfo, String artifactVersion) {
     echo "Object Key      : ${objectKey}"
     echo "Download Path   : ${downloadPath}"
 
+    echo ""
+    echo "Artifact Extracted Successfully"
+    echo "Deploy Path     : ${deployDirectory}"
+
+    bat """
+    dir "${deployDirectory}"
+    """
+
     return [
 
         ARTIFACT_NAME : artifactName,
 
-        DOWNLOAD_PATH : downloadPath
+        DOWNLOAD_PATH : downloadPath,
+
+        DEPLOY_PATH : deployDirectory
 
     ]
 
