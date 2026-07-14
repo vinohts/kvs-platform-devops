@@ -151,6 +151,21 @@ pipeline {
 
         }
 
+        stage('Cleanup') {
+
+            steps {
+
+                script {
+
+                    def cleanup = load "jenkins/stages/cleanup.groovy"
+                    cleanup.call(buildInfo)
+
+                }
+
+            }
+
+        }
+
         stage('Summary') {
 
             steps {

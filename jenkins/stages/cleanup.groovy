@@ -1,19 +1,36 @@
 /**
  * ============================================================================
  * KVS Platform
- * Workspace Cleanup Stage
+ * Cleanup Stage
  * ============================================================================
  */
 
-def call() {
+def call(Map buildInfo) {
 
     echo "--------------------------------------------------"
     echo "Workspace Cleanup"
     echo "--------------------------------------------------"
 
-    deleteDir()
+    /*
+     * Remove Package Directory
+     */
+    bat """
+    if exist "${env.WORKSPACE}\\package" (
+        rmdir /s /q "${env.WORKSPACE}\\package"
+    )
+    """
 
-    echo "Workspace cleaned successfully."
+    /*
+     * Remove Application Repository
+     */
+    bat """
+    if exist "${env.WORKSPACE}\\kvs-platform-app" (
+        rmdir /s /q "${env.WORKSPACE}\\kvs-platform-app"
+    )
+    """
+
+    echo ""
+    echo "Workspace cleanup completed."
 
 }
 
