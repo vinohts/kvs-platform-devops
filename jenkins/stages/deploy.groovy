@@ -11,6 +11,8 @@ def call(Map buildInfo, String artifactVersion) {
     String objectKey = "${buildInfo.GIT_BRANCH}/${artifactVersion}/${artifactName}"
     String s3Uri = "s3://${bucket}/${objectKey}"
 
+    String tfEnv = (buildInfo.GIT_BRANCH == 'release') ? 'prod' : 'dev'
+
     String instanceId
 
     withAWS(credentials: buildInfo.AWS_CREDENTIAL, region: buildInfo.AWS_REGION) {
@@ -19,7 +21,7 @@ def call(Map buildInfo, String artifactVersion) {
             script: """
             @echo off
             aws ec2 describe-instances ^
-                --filters "Name=tag:Name,Values=${c.PROJECT_NAME}-${buildInfo.GIT_BRANCH}-app-01" "Name=instance-state-name,Values=running" ^
+                --filters "Name=tag:Name,Values=${c.PROJECT_NAME}-${tfEnv}-app-01" "Name=instance-state-name,Values=running" ^
                 --query "Reservations[0].Instances[0].InstanceId" ^
                 --output text
             """,
@@ -27,7 +29,7 @@ def call(Map buildInfo, String artifactVersion) {
         ).trim().readLines().last().trim()
 
         if (!instanceId || instanceId == "None") {
-            error "No running instance found tagged ${c.PROJECT_NAME}-${buildInfo.GIT_BRANCH}-app-01"
+            error "No running instance found tagged ${c.PROJECT_NAME}-${tfEnv}-app-01"
         }
 
         logger.kv("Target Instance", instanceId)
