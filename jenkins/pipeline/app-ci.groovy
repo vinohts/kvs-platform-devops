@@ -22,6 +22,14 @@ pipeline {
 
     agent any
 
+    parameters {
+        choice(
+            name: 'TARGET_ENV',
+            choices: ['develop', 'release'],
+            description: 'Environment to build and publish for'
+        )
+    }
+
     stages {
 
         stage('Branch Validation') {
@@ -35,7 +43,7 @@ pipeline {
                      * Temporary Branch
                      * ----------------------------------------------------------------
                      */
-                    currentBranch = "develop"
+                    currentBranch = params.TARGET_ENV
 
                     /*
                      * ----------------------------------------------------------------
