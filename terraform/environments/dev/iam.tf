@@ -61,6 +61,48 @@ resource "aws_iam_role_policy_attachment" "ssm" {
 }
 /*
 ==============================================================================
+S3 Read Access for Deployment Artifacts
+==============================================================================
+*/
+
+resource "aws_iam_role_policy" "s3_artifacts" {
+
+  name = "${local.project_name}-${var.environment}-s3-artifacts"
+
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+
+    Version = "2012-10-17"
+
+    Statement = [
+
+      {
+
+        Effect = "Allow"
+
+        Action = [
+
+          "s3:GetObject"
+
+        ]
+
+        Resource = [
+
+          "arn:aws:s3:::kvs-platform-artifacts-develop/*",
+          "arn:aws:s3:::kvs-platform-artifacts-release/*"
+
+        ]
+
+      }
+
+    ]
+
+  })
+
+}
+/*
+==============================================================================
 EC2 Instance Profile
 ==============================================================================
 */
