@@ -1,36 +1,16 @@
-/**
- * ============================================================================
- * KVS Platform
- * Cleanup Stage
- * ============================================================================
- */
-
 def call(Map buildInfo) {
 
-    echo "--------------------------------------------------"
-    echo "Workspace Cleanup"
-    echo "--------------------------------------------------"
+    def constants = load "jenkins/common/constants.groovy"
+    def logger    = load "jenkins/common/logger.groovy"
+    def utils     = load "jenkins/common/utils.groovy"
+    def c = constants.get()
 
-    /*
-     * Remove Package Directory
-     */
-    bat """
-    if exist "${env.WORKSPACE}\\package" (
-        rmdir /s /q "${env.WORKSPACE}\\package"
-    )
-    """
+    logger.section("Workspace Cleanup")
 
-    /*
-     * Remove Application Repository
-     */
-    bat """
-    if exist "${env.WORKSPACE}\\kvs-platform-app" (
-        rmdir /s /q "${env.WORKSPACE}\\kvs-platform-app"
-    )
-    """
+    utils.removeDir("${env.WORKSPACE}\\package")
+    utils.removeDir("${env.WORKSPACE}\\${c.APP_REPO_NAME}")
 
-    echo ""
-    echo "Workspace cleanup completed."
+    logger.info("Workspace cleanup completed.")
 
 }
 

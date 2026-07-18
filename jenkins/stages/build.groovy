@@ -1,30 +1,21 @@
-/**
- * ============================================================================
- * KVS Platform
- * Application Build Stage
- * ============================================================================
- */
-
 def call(Map buildInfo) {
 
-    echo "--------------------------------------------------"
-    echo "Application Build"
-    echo "--------------------------------------------------"
+    def constants = load "jenkins/common/constants.groovy"
+    def logger    = load "jenkins/common/logger.groovy"
+    def c = constants.get()
 
-    dir("kvs-platform-app") {
+    logger.section("Application Build")
 
-        echo "Application Repository : kvs-platform-app"
-        echo "Workspace              : ${pwd()}"
+    dir(c.APP_REPO_NAME) {
 
-        if (!fileExists("README.md")) {
-            error "README.md not found. Invalid application repository."
+        logger.info("Application Repository : ${c.APP_REPO_NAME}")
+        logger.info("Workspace              : ${pwd()}")
+
+        if (!fileExists(c.README_MARKER)) {
+            error "${c.README_MARKER} not found. Invalid application repository."
         }
 
-        echo "Repository validation successful."
-
-        echo ""
-        echo "Application Contents"
-        echo "------------------------------"
+        logger.info("Repository validation successful.")
 
         if (isUnix()) {
             sh "ls -la"
@@ -34,8 +25,7 @@ def call(Map buildInfo) {
 
     }
 
-    echo ""
-    echo "Build completed successfully."
+    logger.info("Build completed successfully.")
 
 }
 

@@ -1,43 +1,33 @@
-/**
- * ============================================================================
- * KVS Platform
- * Package Stage
- * ============================================================================
- */
-
 def call(Map buildInfo) {
 
-    echo "--------------------------------------------------"
-    echo "Application Packaging"
-    echo "--------------------------------------------------"
+    def constants = load "jenkins/common/constants.groovy"
+    def logger    = load "jenkins/common/logger.groovy"
+    def utils     = load "jenkins/common/utils.groovy"
+    def c = constants.get()
+
+    logger.section("Application Packaging")
 
     def packageDirectory = "${env.WORKSPACE}\\package"
+    def artifactName = "${c.PROJECT_NAME}-${buildInfo.BUILD_VERSION}.zip"
 
-    def artifactName = "kvs-platform-${buildInfo.BUILD_VERSION}.zip"
+    utils.recreateDir(packageDirectory)
 
-    dir("kvs-platform-app") {
-
+    dir(c.APP_REPO_NAME) {
         bat """
-        if not exist "${packageDirectory}" mkdir "${packageDirectory}"
-
         powershell Compress-Archive ^
             -Path * ^
             -DestinationPath "${packageDirectory}\\${artifactName}" ^
             -Force
         """
-
     }
 
-    echo "Package Directory : ${packageDirectory}"
-    echo "Artifact Name     : ${artifactName}"
-    echo "Packaging Status  : SUCCESS"
+    logger.kv("Package Directory", packageDirectory)
+    logger.kv("Artifact Name", artifactName)
+    logger.kv("Packaging Status", "SUCCESS")
 
     return [
-
         ARTIFACT_NAME : artifactName,
-
         ARTIFACT_PATH : "${packageDirectory}\\${artifactName}"
-
     ]
 
 }
