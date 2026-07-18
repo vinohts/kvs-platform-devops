@@ -4,8 +4,11 @@ def get() {
         APP_REPO_NAME       : "kvs-platform-app",
         APP_REPO_URL        : "https://github.com/vinohts/kvs-platform-app.git",
         APP_REPO_CREDENTIAL : "github-pat",
-        S3_ARTIFACT_BUCKET  : "kvs-platform-artifacts",
-        README_MARKER       : "README.md"
+        README_MARKER       : "README.md",
+        S3_BUCKETS : [
+            develop : "kvs-platform-artifacts-develop",
+            release : "kvs-platform-artifacts-release"
+        ]
     ]
 }
 
