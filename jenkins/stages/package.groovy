@@ -1,4 +1,4 @@
-def call(Map buildInfo) {
+def call(Map buildInfo, Map buildOutput) {
 
     def constants = load "jenkins/common/constants.groovy"
     def logger    = load "jenkins/common/logger.groovy"
@@ -12,7 +12,7 @@ def call(Map buildInfo) {
 
     utils.recreateDir(packageDirectory)
 
-    dir(c.APP_REPO_NAME) {
+    dir(buildOutput.PUBLISH_DIR) {
         bat """
         powershell Compress-Archive ^
             -Path * ^

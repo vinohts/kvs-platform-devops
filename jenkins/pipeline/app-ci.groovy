@@ -15,6 +15,7 @@
 def currentBranch
 def config
 def buildInfo
+def buildOutput
 def artifact
 def s3Artifact
 
@@ -111,7 +112,7 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def build = load "jenkins/stages/build.groovy"
-                    build.call(buildInfo)
+                    buildOutput = build.call(buildInfo)
 
                 }
 
@@ -131,7 +132,7 @@ pipeline {
                      * ----------------------------------------------------------------
                      */
                     def packageStage = load "jenkins/stages/package.groovy"
-                    artifact = packageStage.call(buildInfo)
+                    artifact = packageStage.call(buildInfo, buildOutput)
 
                 }
 

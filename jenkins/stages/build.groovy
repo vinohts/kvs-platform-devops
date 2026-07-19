@@ -2,30 +2,40 @@ def call(Map buildInfo) {
 
     def constants = load "jenkins/common/constants.groovy"
     def logger    = load "jenkins/common/logger.groovy"
+    def utils     = load "jenkins/common/utils.groovy"
     def c = constants.get()
 
     logger.section("Application Build")
+
+    String publishDirectory = "${env.WORKSPACE}\\publish"
+
+    utils.recreateDir(publishDirectory)
 
     dir(c.APP_REPO_NAME) {
 
         logger.info("Application Repository : ${c.APP_REPO_NAME}")
         logger.info("Workspace              : ${pwd()}")
 
-        if (!fileExists(c.README_MARKER)) {
-            error "${c.README_MARKER} not found. Invalid application repository."
-        }
-
-        logger.info("Repository validation successful.")
-
-        if (isUnix()) {
-            sh "ls -la"
-        } else {
-            bat "dir"
-        }
+        bat """
+        dotnet publish ^
+            --configuration Release ^
+            --runtime linux-x64 ^
+            --self-contained true ^
+            --output "${publishDirectory}"
+        """
 
     }
 
-    logger.info("Build completed successfully.")
+    if (!fileExists("${publishDirectory}\\${c.APP_ASSEMBLY_NAME}.dll")) {
+        error "dotnet publish did not produce ${c.APP_ASSEMBLY_NAME}.dll. Build failed."
+    }
+
+    logger.info("dotnet publish completed successfully.")
+    logger.kv("Publish Directory", publishDirectory)
+
+    return [
+        PUBLISH_DIR : publishDirectory
+    ]
 
 }
 

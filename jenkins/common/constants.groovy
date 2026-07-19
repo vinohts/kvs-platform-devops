@@ -5,6 +5,7 @@ def get() {
         APP_REPO_URL        : "https://github.com/vinohts/kvs-platform-app.git",
         APP_REPO_CREDENTIAL : "github-pat",
         README_MARKER       : "README.md",
+        APP_ASSEMBLY_NAME   : "KvsOrderHub",
         S3_BUCKETS : [
             develop : "kvs-platform-artifacts-develop",
             release : "kvs-platform-artifacts-release"
