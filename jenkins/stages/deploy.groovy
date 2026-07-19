@@ -28,7 +28,15 @@ Environment=DB_CONNECTION_STRING=Host=localhost;Port=5432;Username=postgres;Pass
 WantedBy=multi-user.target
 """
 
-    String unitFileBase64 = unitFileContent.bytes.encodeBase64().toString()
+    writeFile file: "kvsorderhub.service", text: unitFileContent
+
+    String unitFileBase64 = bat(
+        script: """
+        @echo off
+        powershell -Command "[Convert]::ToBase64String([IO.File]::ReadAllBytes('kvsorderhub.service'))"
+        """,
+        returnStdout: true
+    ).trim().readLines().last().trim()
 
     String instanceId
 
