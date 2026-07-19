@@ -41,7 +41,7 @@ def call(Map buildInfo, String artifactVersion) {
                 --instance-ids ${instanceId} ^
                 --document-name "AWS-RunShellScript" ^
                 --comment "Deploy ${artifactVersion}" ^
-                --parameters commands="set -e","sudo mkdir -p /opt/app","sudo aws s3 cp ${s3Uri} /tmp/${artifactName}","sudo rm -rf /opt/app/*","sudo unzip -o /tmp/${artifactName} -d /opt/app","sudo rm -f /tmp/${artifactName}" ^
+                --parameters commands="set -e","sudo mkdir -p /opt/app","sudo aws s3 cp ${s3Uri} /tmp/${artifactName}","sudo rm -rf /opt/app/*","sudo unzip -o /tmp/${artifactName} -d /opt/app || [ \$? -eq 1 ]","sudo rm -f /tmp/${artifactName}" ^
                 --query "Command.CommandId" ^
                 --output text
             """,
