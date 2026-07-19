@@ -10,8 +10,25 @@ def call(Map buildInfo, String artifactVersion) {
     String artifactName = "${c.PROJECT_NAME}-${artifactVersion}.zip"
     String objectKey = "${buildInfo.GIT_BRANCH}/${artifactVersion}/${artifactName}"
     String s3Uri = "s3://${bucket}/${objectKey}"
-
     String tfEnv = (buildInfo.GIT_BRANCH == 'release') ? 'prod' : 'dev'
+
+    String unitFileContent = """[Unit]
+Description=KvsOrderHub Application
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/app
+ExecStart=/opt/app/${c.APP_ASSEMBLY_NAME}
+Restart=always
+RestartSec=5
+Environment=ASPNETCORE_URLS=http://0.0.0.0:80
+Environment=DB_CONNECTION_STRING=Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=kvsorderhub
+
+[Install]
+WantedBy=multi-user.target
+"""
+
+    String unitFileBase64 = unitFileContent.bytes.encodeBase64().toString()
 
     String instanceId
 
@@ -41,7 +58,7 @@ def call(Map buildInfo, String artifactVersion) {
                 --instance-ids ${instanceId} ^
                 --document-name "AWS-RunShellScript" ^
                 --comment "Deploy ${artifactVersion}" ^
-                --parameters commands="set -e","sudo mkdir -p /opt/app","sudo aws s3 cp ${s3Uri} /tmp/${artifactName}","sudo rm -rf /opt/app/*","sudo unzip -o /tmp/${artifactName} -d /opt/app || [ \$? -eq 1 ]","sudo rm -f /tmp/${artifactName}" ^
+                --parameters commands="set -e","sudo mkdir -p /opt/app","sudo systemctl stop kvsorderhub || true","sudo aws s3 cp ${s3Uri} /tmp/${artifactName}","sudo rm -rf /opt/app/*","sudo unzip -o /tmp/${artifactName} -d /opt/app || [ \\$? -eq 1 ]","sudo chmod +x /opt/app/${c.APP_ASSEMBLY_NAME}","sudo rm -f /tmp/${artifactName}","echo ${unitFileBase64} | base64 -d | sudo tee /etc/systemd/system/kvsorderhub.service > /dev/null","sudo systemctl daemon-reload","sudo systemctl enable kvsorderhub","sudo systemctl restart kvsorderhub" ^
                 --query "Command.CommandId" ^
                 --output text
             """,
@@ -88,7 +105,7 @@ def call(Map buildInfo, String artifactVersion) {
 
     logger.kv("Bucket", bucket)
     logger.kv("Object Key", objectKey)
-    logger.kv("Deploy Target", "/opt/app on ${instanceId}")
+    logger.kv("Deploy Target", "/opt/app on ${instanceId} (systemd: kvsorderhub)")
 
     return [
         ARTIFACT_NAME : artifactName,
