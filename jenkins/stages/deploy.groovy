@@ -38,6 +38,34 @@ WantedBy=multi-user.target
         returnStdout: true
     ).trim().readLines().last().trim()
 
+    List<String> commands = [
+        "set -e",
+        "sudo mkdir -p /opt/app",
+        "sudo systemctl stop kvsorderhub || true",
+        "sudo aws s3 cp ${s3Uri} /tmp/${artifactName}",
+        "sudo rm -rf /opt/app/*",
+        "sudo unzip -o /tmp/${artifactName} -d /opt/app > /tmp/unzip.log 2>&1 || true",
+        "test -f /opt/app/${c.APP_ASSEMBLY_NAME}",
+        "sudo chmod +x /opt/app/${c.APP_ASSEMBLY_NAME}",
+        "sudo rm -f /tmp/${artifactName}",
+        "echo ${unitFileBase64} | base64 -d | sudo tee /etc/systemd/system/kvsorderhub.service > /dev/null",
+        "sudo systemctl daemon-reload",
+        "sudo systemctl enable kvsorderhub",
+        "sudo systemctl restart kvsorderhub"
+    ]
+
+    String commandsJson = commands.collect {
+        '"' + it.replace('\\', '\\\\').replace('"', '\\"') + '"'
+    }.join(",\n        ")
+
+    String paramsJson = """{
+    "commands": [
+        ${commandsJson}
+    ]
+}"""
+
+    writeFile file: "ssm-params.json", text: paramsJson
+
     String instanceId
 
     withAWS(credentials: buildInfo.AWS_CREDENTIAL, region: buildInfo.AWS_REGION) {
@@ -66,7 +94,7 @@ WantedBy=multi-user.target
                 --instance-ids ${instanceId} ^
                 --document-name "AWS-RunShellScript" ^
                 --comment "Deploy ${artifactVersion}" ^
-                --parameters commands="set -e","sudo mkdir -p /opt/app","sudo systemctl stop kvsorderhub || true","sudo aws s3 cp ${s3Uri} /tmp/${artifactName}","sudo rm -rf /opt/app/*","sudo unzip -o /tmp/${artifactName} -d /opt/app > /tmp/unzip.log 2>&1 || true","test -f /opt/app/${c.APP_ASSEMBLY_NAME}","sudo chmod +x /opt/app/${c.APP_ASSEMBLY_NAME}","sudo rm -f /tmp/${artifactName}","echo ${unitFileBase64} | base64 -d | sudo tee /etc/systemd/system/kvsorderhub.service > /dev/null","sudo systemctl daemon-reload","sudo systemctl enable kvsorderhub","sudo systemctl restart kvsorderhub" ^
+                --parameters file://ssm-params.json ^
                 --query "Command.CommandId" ^
                 --output text
             """,
