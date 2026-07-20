@@ -1,0 +1,35 @@
+cat > playbooks/deploy.yml << 'EOF'
+---
+- name: Deploy KVS platform app artifact
+  hosts: aws_ec2
+  become: true
+  vars:
+    target_env: "{{ target_env }}"
+    artifact_version: "{{ artifact_version }}"
+    s3_bucket: "kvs-platform-artifacts-{{ target_env }}"
+    artifact_key: "{{ target_env }}/{{ target_env }}-{{ artifact_version }}/kvs-platform-{{ target_env }}-{{ artifact_version }}.zip"
+    local_zip: "/tmp/kvs-platform-{{ target_env }}-{{ artifact_version }}.zip"
+    deploy_dir: "/opt/app"
+
+  tasks:
+    - name: Ensure deploy directory exists
+      ansible.builtin.file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Download artifact from S3 using instance IAM role
+      ansible.builtin.command:
+        cmd: "aws s3 cp s3://{{ s3_bucket }}/{{ artifact_key }} {{ local_zip }}"
+
+    - name: Extract artifact into deploy directory
+      ansible.builtin.unarchive:
+        src: "{{ local_zip }}"
+        dest: "{{ deploy_dir }}"
+        remote_src: true
+
+    - name: Clean up downloaded zip
+      ansible.builtin.file:
+        path: "{{ local_zip }}"
+        state: absent
+EOF
