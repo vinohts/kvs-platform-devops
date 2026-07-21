@@ -23,6 +23,7 @@ Restart=always
 RestartSec=5
 Environment=ASPNETCORE_URLS=http://0.0.0.0:80
 Environment=DB_CONNECTION_STRING=Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=kvsorderhub
+Environment=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 [Install]
 WantedBy=multi-user.target
